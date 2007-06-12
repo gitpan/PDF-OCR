@@ -1,0 +1,16 @@
+bin/pdf2ocr - extract text from all images inside pdf
+bin/ocr - extract text from an image
+bin/pdfgetext - extract text from pdf ordered by page, including text and image text
+lib/PDF/GetImages.pm - extract images from a pdf
+lib/Image/OCR/Tesseract.pm - get ocr from any image type
+lib/PDF/OCR.pm - get ocr from any images inside a pdf
+lib/PDF/OCR/Thorough.pm - orderly per page extrac text and ocr from images 
+t/0.t
+t/1.t
+t/2_PDFOCRThorough.t
+t/scan1.pdf
+MANIFEST
+Makefile.PL
+INSTALL - install help
+README
+META.yml                                 Module meta-data (added by MakeMaker)

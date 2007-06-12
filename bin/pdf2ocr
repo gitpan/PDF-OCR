@@ -1,0 +1,95 @@
+#!/usr/bin/perl -w
+use strict;
+use warnings;
+use Cwd;
+use File::Copy;
+use PDF::OCR;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.1.1.1 $ =~ /(\d+)/g;
+
+
+my $o = gopts('vhc:d');
+my $abs_pdf = get_pdfarg();
+
+my $DEBUG = 0;
+sub DEBUG : lvalue {$DEBUG}
+$DEBUG++ if $o->{d};
+
+if (DEBUG){
+
+	$PDF::OCR::DEBUG=1;
+	$Image::OCR::Tesseract::DEBUG = 1;
+}
+
+my $abs_meta = '/tmp/pdf2ocr';
+if ($o->{c}){
+	$abs_meta = $o->{c};
+	-d $abs_meta or die("$0, c abs dir was not there [$abs_meta]");
+	my $filename = $abs_pdf; $filename=~s/^.+\/+//;
+	File::Copy::cp($abs_pdf,$o->{c}.'/'.$filename) or die; 
+	$abs_pdf = $o->{c}.'/'.$filename;
+}
+
+$o->{p} ||=0;
+my $page = sprintf "%03d", $o->{p};
+
+
+my $p = new PDF::OCR($abs_pdf);
+
+my $ocr = $p->get_ocr;
+
+print $ocr;
+
+exit;
+
+
+
+
+sub get_pdfarg {
+	scalar @ARGV and defined $ARGV[0] or die("$0, missing argument");	
+	my $pdf = Cwd::abs_path($ARGV[0]) or die("$0, argument can't resolve to disk with Cwd::abs_path()");	
+	-f $pdf and $pdf=~/\.pdf$/i or die("$0, file [$pdf] not there");
+	return $pdf;
+}
+
+sub gopts {
+	require Getopt::Std;	
+	my $opts = shift;
+	$opts ||= 'vh';
+	my $o = {};
+	Getopt::Std::getopts($opts, $o); 
+	print $VERSION and exit if $o->{v};
+	man() if $o->{h}; 
+	return $o;	
+}
+
+sub man {
+   print `man pdf2ocr` and exit; 
+}
+
+__END__
+
+=pod
+
+=head1 NAME
+
+pdf2ocr - get text content of pdf document images within
+
+=head1 DESCRIPTION
+
+argument is a pdf file
+
+this script assumes that each page in the pdf is one 8.5x11 page.. ONE image
+that's what the calculations are set up for
+
+
+=head1 OPTIONS
+
+	-h help
+	-d debug
+	-v version
+
+=head1 AUTHOR
+
+Leo Charre leocharre at cpan dot org
+
+=cut

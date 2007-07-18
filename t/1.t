@@ -3,7 +3,7 @@ use lib './lib';
 use PDF::OCR;
 use strict;
 use Cwd;
-use Smart::Comments '###';
+#use Smart::Comments '###';
 my $abs_pdf = cwd().'/t/scan1.pdf';
 
 

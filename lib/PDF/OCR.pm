@@ -5,11 +5,10 @@ use Image::OCR::Tesseract;
 use Carp;
 use Cwd;
 use File::Copy;
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.3 $ =~ /(\d+)/g;
 
 $PDF::OCR::DEBUG=0;
 sub DEBUG : lvalue { $PDF::OCR::DEBUG }
-
 
 sub new {
 	my($class, $arg) = @_;

@@ -1,6 +1,6 @@
 INSTALL
 =======
-$Revision: 1.2 $
+$Revision: 1.4 $
 
 Leo Charre leocharre at cpan dot org
 
@@ -60,10 +60,13 @@ INSTALLING TESSERACT
 
 You may be able to simply install the SVN version of Tesseract by using:
 
-    svn checkout http://tesseract-ocr.googlecode.com/svn/trunk/ tesseract-ocr
-    ./configure
-    make
-    make install
+ svn checkout http://tesseract-ocr.googlecode.com/svn/trunk/ tesseract-ocr
+ ./runautoconf
+ mkdir build-directory
+ cd build-directory
+ ../configure
+ make
+ make install
 
 
 for more see google project on ocr, they use tesseract

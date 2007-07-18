@@ -8,7 +8,7 @@ require Exporter;
 use vars qw(@EXPORT_OK @ISA);
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(get_ocr _tesseract);
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.3 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 $Image::OCR::Tesseract::DEBUG= 0;
 sub DEBUG : lvalue { $Image::OCR::Tesseract::DEBUG }
@@ -26,11 +26,12 @@ sub get_ocr {
 		my $abs_tif = $abs_tmp.'/.tesseract_temp_'.time().(int rand 2000).'.tif';		
 		my $convert = which('convert') or die("is ImageMagick properly installed on this system? missing convert?");		
 		my @args = ($convert, $abs_image, '-compress','none','-colorspace','rgb','-contrast',$abs_tif);
-	
+	   
+   
 		system(@args) == 0 
 				or die(__PACKAGE__."::get_ocr(), imagemagick convert problem? @args, $?");				
 				
-		$content = _tesseract($abs_tif);
+		$content = _tesseract($abs_tif); defined $content or $content = '';
 		print STDERR "temp tif: $abs_tif\n" if DEBUG;		
 		unlink $abs_tif unless DEBUG;
 		
@@ -45,13 +46,18 @@ sub get_ocr {
 
 sub _tesseract {
 	my $abs_image = shift;
-	-f $abs_image or die("$abs_image not image");
+	#-f $abs_image or die("$abs_image not image");
 
 	my $tesseract = which('tesseract') or die('missing tesseract?');
 
-	my @args = ($tesseract,$abs_image,$abs_image);
-	system(@args) == 0
-		or die("call to tesseract ocr failed, system [@args] died.. $? - $!");
+	#my @args = ($tesseract,$abs_image,$abs_image);
+
+   
+   
+	system("$tesseract $abs_image $abs_image 2>/dev/null");
+	#	or warn("call to tesseract ocr failed, system [@args] : $?") and return;
+
+      
 	
 	my $txt = "$abs_image.txt";
 	print STDERR "text saved as '$abs_image.txt'\n" if DEBUG;
@@ -110,7 +116,9 @@ warns if no output
 
 =head1 _tesseract()
 
-Argument is abs path to tif file. Will return text output
+Argument is abs path to tif file. Will return text output. 
+If none inside or tesseract fails, returns empty string.
+If tesseract fails, warns.
 
 =head1 SEE ALSO
 
@@ -123,6 +131,8 @@ gocr
 Set the debug flag on:
 
 	$Image::OCR::Tesseract::DEBUG = 1;
+
+A temporary file is created, if DEBUG is on, the file is not deleted, the file path is printed to STDERR.
 
 =head1 AUTHOR
 

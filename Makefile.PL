@@ -14,5 +14,5 @@ WriteMakefile(
 					 'File::Slurp' => 0,
 					 'Dyer::CLI' => 0,
 					 },
-    EXE_FILES               => [qw(bin/pdf2ocr bin/ocr bin/pdfgetext)],
+    EXE_FILES               => [qw(bin/pdf2ocr bin/ocr bin/pdfgetext bin/pdf2ocrturntotext)],
 );

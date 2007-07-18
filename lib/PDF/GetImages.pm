@@ -2,34 +2,47 @@ package PDF::GetImages;
 use strict;
 use File::Which 'which';
 use Carp;
-use Cwd;
+#use Cwd;
 require Exporter;
 use vars qw(@EXPORT_OK @ISA);
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(pdfimages);
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.5 $ =~ /(\d+)/g;
+
+
+
+$PDF::GetImages::DEBUG =0;
+sub DEBUG : lvalue { $PDF::GetImages::DEBUG }
+
+
 
 
 sub pdfimages {
 	my $pdf = shift;
-	-f $pdf and $pdf=~/\.pdf$/i or croak(__PACKAGE__."::pdfimages() [$pdf] not pdf?");
+	-f $pdf and $pdf=~/\.pdf$/i or warn(__PACKAGE__."::pdfimages() [$pdf] not pdf?") and return [];
 
-	my $filename_only = $pdf; $filename_only=~s/\.pdf$|^.+\/+//gi or die(__PACKAGE__."::pdfimages() mismatch");
+	my $filename_only = $pdf; 
+   $filename_only=~s/\.pdf$|^.+\/+//gi or die(__PACKAGE__."::pdfimages() mismatch");# should never happen, we just tested for this attop
 
-	my $cwd= cwd();
+#	my $cwd= cwd();
+	#defined $cwd or warn(__PACKAGE__."::pdfimages() cannot get cwd() value, cannot continue.") and return [];
 	
 	my $abs_loc = $pdf; $abs_loc=~s/\/*[^\/]+$// or die(__PACKAGE__."::pdfimages(), cant get abs loc");
-
+	defined $abs_loc and $abs_loc or warn("abs location for $pdf resolves to nothing? cannot continue.") and return [];
+   
 	
-	my $bin = which('pdfimages'); $bin or die(	__PACKAGE__."::pdfimages() will not work, is pdfimages (xpdf) installed?");
+	my $bin = which('pdfimages') or die( __PACKAGE__."::pdfimages() will not work, is pdfimages (xpdf) installed?");
 
-	chdir $abs_loc;	
-	system($bin, $pdf,$filename_only) == 0
-		or die("$?");		
-	opendir(DIR, $abs_loc) or die();
+	chdir($abs_loc) or warn(__PACKAGE__."::pdfimages() cannot chdir into $abs_loc.") and return [];	
+   my @args=($bin, $pdf,$filename_only);
+   print STDERR " args @args\n" if DEBUG;
+   
+	system(@args) == 0
+		or die("system [@args] bad.. $?");		
+	opendir(DIR, $abs_loc) or die("cannot open dir $abs_loc");
 	my @pagefiles = map { $_ = "$abs_loc/$_" } sort grep { /$filename_only.+\.p.m$/i } readdir DIR;
 	closedir DIR;
-	chdir $cwd; # go back to same place we started
+#	chdir($cwd); # go back to same place we started
 
 	unless(scalar @pagefiles){
 		carp(__PACKAGE__."::pdfimages() no output from pdfimages for [$pdf]? [$abs_loc]");
@@ -67,6 +80,9 @@ argument is abs path to pdf doc
 optional argument is a dir to which to send images extracted
 returns abs paths to images extracted
 images are extracted to same dir pdf is in
+
+If this is not a pdf, the file does not exist, or no images 
+are extracted, warns and returns empty array ref []
 
 =head1 AUTHOR
 

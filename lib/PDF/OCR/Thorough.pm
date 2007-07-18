@@ -88,38 +88,10 @@ This is called by constructor.
 
 =cut
 
-sub abs_tmp_pdf {
-	my $self = shift;
-	unless( $self->{abs_tmp_pdf} ){
-		$self->{abs_tmp_pdf} = $self->abs_tmp.'/'.$self->filename;
-		File::Copy::cp($self->abs_pdf, $self->abs_tmp_pdf);	 # muahahaha
-		print STDERR $self->abs_pdf .' copied to '.$self->abs_tmp_pdf."\n" if DEBUG;
-	}
-	return $self->{abs_tmp_pdf};
-}
 
-=head2 abs_tmp_pdf()
-
-returns abs path to where the temp copy of the pdf is
-
-=cut
-
-sub filename {
-	my $self = shift;
-	my $filename = $self->abs_pdf;
-	$filename=~s/^.+\/+//;
-	return $filename;	
-}
-
-=head2 filename()
-
-returns filename of the original pdf provided as argument to constructor
-
-=cut
 
 sub pages {
 	my $self = shift;
-
 	my $count = scalar @{$self->abs_pages};
 	$count ||= 0;
 	return $count;	
@@ -130,6 +102,11 @@ sub pages {
 returns number of page files extracted
 
 =cut
+
+
+
+
+
 
 sub abs_tmp {
 	my $self = shift;
@@ -169,27 +146,43 @@ sub _tmpid {
 	return $self->{tmpid};
 }
 
-
-sub _abs_images {
-	my($self,$abs_pdf) =@_; $abs_pdf or croak('missing abs pdf argument to _abs_images');	
-
-	print STDERR "_abs_images [$abs_pdf]\n" if DEBUG;
-	$self->{abs_images} ||={};
-
-	unless( defined $self->{abs_images}->{$abs_pdf} ){
-		
-		my $images = PDF::GetImages::pdfimages($abs_pdf); 
-		$images ||=[];		
-		$self->{abs_images}->{$abs_pdf} = $images;	
-		
-		#if (DEBUG){
-		#	print STDERR "got images out of $abs_pdf:\n";
-		#	map { print STDERR " $_\n" } @{$images};
-		#}		
-	}
-
-	return $self->{abs_images}->{$abs_pdf};
+sub filename {
+	my $self = shift;
+	my $filename = $self->abs_pdf;
+	$filename=~s/^.+\/+//;
+	return $filename;	
 }
+
+=head2 filename()
+
+returns filename of the original pdf provided as argument to constructor
+
+=cut
+
+sub abs_tmp_pdf {
+	my $self = shift;
+	unless( $self->{abs_tmp_pdf} ){
+		$self->{abs_tmp_pdf} = $self->abs_tmp.'/'.$self->filename;
+		File::Copy::cp($self->abs_pdf, $self->abs_tmp_pdf);	 # muahahaha
+		print STDERR $self->abs_pdf .' copied to '.$self->abs_tmp_pdf."\n" if DEBUG;
+	}
+	return $self->{abs_tmp_pdf};
+}
+
+=head2 abs_tmp_pdf()
+
+returns abs path to where the temp copy of the pdf is
+
+=cut
+
+
+
+
+
+
+
+
+
 
 sub abs_images {
 	my($self,$abs_page) = @_;
@@ -205,12 +198,49 @@ sub abs_images {
 	return $self->_abs_images($abs_page);	
 }
 
+sub _abs_images {
+	my($self,$abs_pdf) =@_; $abs_pdf or croak('missing abs pdf argument to _abs_images');	
+
+	print STDERR "_abs_images [$abs_pdf]\n" if DEBUG;
+	$self->{abs_images} ||={};
+
+	unless( defined $self->{abs_images}->{$abs_pdf} ){
+		
+		my $images = PDF::GetImages::pdfimages($abs_pdf); 
+		$images ||=[];		
+		$self->{abs_images}->{$abs_pdf} = $images;
+      
+	}
+
+	return $self->{abs_images}->{$abs_pdf};
+}
+
 =head2 abs_images()
 
 optional argument is abs path to a page file ( see abs_pages() ).
-if no argument provided, returns abs path to all images extracted from all pages.
+if no argument provided, returns abs paths to all images extracted from all pages.
 
 =cut
+
+
+
+
+
+sub get_page_text {
+	my ($self,$abs_page) = @_;	
+
+	if ($abs_page =~/^\d+$/){
+		
+		my $abs = @{$self->abs_pages}[($abs_page+1)];
+		defined $abs or warn("Page [$abs_page] does not exist?") and return;
+
+		print STDERR " getting page $abs_page\n" if DEBUG;
+		$abs_page = $abs;
+	}
+
+	my $text = $self->_get_page_text($abs_page);
+	return $text;
+}
 
 sub _pdftotext {
 	my $self = shift;
@@ -229,13 +259,15 @@ sub _get_page_text {
 		my $text = '';
 
 		#first try pdftotext
-		my @command = ($self->_pdftotext,'-q',$abs_page);
+		my @command = ($self->_pdftotext,'-q',$abs_page); # even if empty will insert a pagebreak!
 		system(@command); # dont try ==0, it's fruked up
 		my $out = $abs_page; $out=~s/\.pdf/.txt/;
 
 		if( -f $out	){
 			$text = File::Slurp::slurp($out);
-			print STDERR "text from pdftotext [$text]\n\n" if DEBUG;
+			print STDERR " $out text from pdftotext [$text]\n\n" if DEBUG;
+         warn("WARN Y _get_page_text has \f char") if $text=~/\f/ and DEBUG;
+         
 		}
 	
 		if (length($text) <6 ){
@@ -243,13 +275,19 @@ sub _get_page_text {
 		}
 
 		if( length($text) <6 or $self->force_ocr){
+         $text=''; # important.. to clean out what was in there
 			print STDERR "extracting images for ocr\n" if DEBUG;
 
 			my $imgstext;
 
 			for( @{$self->abs_images($abs_page)}){
 				$imgstext.= $self->get_ocr($_);
-				print STDERR "got ocr for $_\n" if DEBUG;
+            if (DEBUG){
+				   print STDERR "got ocr for $_\n";
+               warn("WARN X _get_page_text has \f char") if ( $imgstext=~/\f/ );
+            }   
+            
+            
 			}	
 		
 			$text.=$imgstext;
@@ -265,22 +303,6 @@ sub _get_page_text {
 	return $self->{pagetext}->{$abs_page};
 }
 
-sub get_page_text {
-	my ($self,$abs_page) = @_;	
-
-	if ($abs_page =~/^\d+$/){
-		
-		my $abs = @{$self->abs_pages}[($abs_page+1)];
-		defined $abs or warn("Page [$abs_page] does not exist?") and return;
-
-		print STDERR " getting page $abs_page\n" if DEBUG;
-		$abs_page = $abs;
-	}
-
-	my $text = $self->_get_page_text($abs_page);
-	return $text;
-}
-
 =head2 get_page_text()
 
 argument is page number or abs path to page file (there is no page 0)
@@ -289,12 +311,47 @@ See also get_text()
 
 =cut
 
+
+
+
+
+sub get_text {
+	my ($self )= shift;
+
+	unless( defined $self->{text}){
+		my $text='';
+      my @pgs;
+      
+		for(@{$self->abs_pages}){
+			push @pgs, $self->get_page_text($_);	
+		}
+      $text.=join "\f",@pgs;
+      
+		$self->{text} = $text;
+
+      print STDERR "WARN get_text \\f char" if $text=~/\f/ ;
+      
+	}
+	
+	return $self->{text};
+}
+
+=head2 get_text()
+
+returns all text in all pages, separated by \f newpage chars.
+See also get_page_text()
+
+=cut
+
+
 sub get_ocr {
 	my($self,$abs_image) = @_;
 	$self->{imgocr} ||={};
 	unless( defined $self->{imgocr}->{$abs_image} ){
 		my $imgtext = Image::OCR::Tesseract::get_ocr($abs_image);			
 		$imgtext ||='';
+
+      print STDERR "WARN Image::OCR::Tesseract has \\f char" if $imgtext=~/\f/ ;
 		$self->{imgocr}->{$abs_image} =$imgtext;		
 	}
 	return $self->{imgocr}->{$abs_image};	
@@ -329,6 +386,8 @@ perhaps with text also, and you want both extracted.
 
 =cut
 
+
+
 sub _pdftk {
 	my $self = shift;
 	$self->{pdftkbin} ||= which('pdftk') or die("pdftk not installed?");
@@ -346,8 +405,11 @@ sub abs_pages {
 		
 
 		my @args = ($self->_pdftk, $abs_tmp_pdf,'burst','output',$abs_outputname );
-		system(@args) == 0 
-			or die("system @args - $?");			
+		unless( system(@args) == 0 ){
+			warn("pdftk burst fails... system @args - $?");
+			$self->{abs_pages} = [];
+			return $self->{abs_pages};
+		}	
 
 		print STDERR " pdftkburst ok for $abs_tmp_pdf\n" if DEBUG;
 
@@ -355,7 +417,12 @@ sub abs_pages {
 		my @abs_pages = map { $_=~s/^/$abs_tmp\//; $_ } sort grep { /$tmpid\_page_\d+\.pdf/  } readdir DIR;
 		closedir DIR;
 
-		scalar @abs_pages or die("no pages in $abs_pdf"); # or just warn() ?
+		unless( scalar @abs_pages) {
+			warn("no pages in $abs_pdf"); # or just warn() ?
+			$self->{abs_pages} = [];
+			return $self->{abs_pages};
+		}	
+
 
 		if (DEBUG){
 			print STDERR "pagefiles:\n";
@@ -375,26 +442,13 @@ returns abs paths to burst pdf pages
 =cut
 
 
-sub get_text {
-	my ($self )= shift;
 
-	unless( defined $self->{text}){
-		my $text='';
-		for(@{$self->abs_pages}){
-			$text.= $self->get_page_text($_);	
-		}
-		$self->{text} = $text;
-	}
-	
-	return $self->{text};
-}
 
-=head2 get_text()
 
-returns all text in all pages, separated by \f newpage chars.
-See also get_page_text()
 
-=cut
+
+
+
 
 
 sub cleanup {
@@ -402,6 +456,19 @@ sub cleanup {
 	File::Path::rmtree($self->abs_tmp);
 	return 1;
 }
+
+sub DESTROY {
+	my $self = shift;
+	if ( ( DEBUG == 0 ) and $self->abs_tmp=~/^\/tmp\/\d+/ ){
+		$self->cleanup;
+	#	printf STDERR "took out %s\n", $self->abs_tmp;
+	}
+	return 1;
+}
+
+=head2 DESTROY
+
+will call cleanup() if DEBUG is not on and temp dir is in tmp
 
 =head2 cleanup()
 

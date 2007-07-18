@@ -21,7 +21,7 @@ for (@pdfs){
 
 	
 
-	ok($p->abs_tmp_pdf,'abs tmp pdf');	
+	ok($p->abs_tmp_pdf,'abs tmp pdf.'. $p->abs_tmp_pdf);	
 
 	ok($p->pages, 'pages() count');
 
@@ -36,8 +36,12 @@ for (@pdfs){
 	close FILE;
 	
 	ok(-f "$abs_pdf.txt", " output saved : $abs_pdf.txt");
+
+   
 	
-	
+   my @pages = split( /\f/, $text);	
+
+   printf STDERR "pagecount %s\n\n", scalar @pages;
 
 
 }

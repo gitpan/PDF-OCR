@@ -4,7 +4,7 @@ use lib './lib';
 use PDF::GetImages 'pdfimages';
 use Image::OCR::Tesseract 'get_ocr';
 use Cwd;
-use Smart::Comments '###';
+#use Smart::Comments '###';
 
 ### Testing Image OCR Tesseract and PDF GetImages
 

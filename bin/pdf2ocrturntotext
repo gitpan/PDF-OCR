@@ -4,7 +4,10 @@ use warnings;
 use lib './lib';
 use base 'Dyer::CLI';
 use PDF::OCR::Thorough::Cached;
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.3 $ =~ /(\d+)/g;
+use Smart::Comments '###';
+
+
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.1 $ =~ /(\d+)/g;
 
 my $conf = config('/etc/pdf2ocr.conf');
 
@@ -16,24 +19,12 @@ my $pdfs = argv_aspaths();
 scalar @$pdfs or man();
 
 
-for (@$pdfs){
+for (@$pdfs){ ### Turning to text <%===       >
    my $p = new PDF::OCR::Thorough::Cached($_) or next;
 	$p->set_abs_cache($conf->{abs_cache});
 
-   my $text = $p->get_text;
-
-   print $text;
+	$p->is_cached or $p->get_text;
 }
-
-
-
-
-
-
-
-
-
-
 
 __END__
 
@@ -41,28 +32,23 @@ __END__
 
 =head1 NAME
 
-pdf2ocr - get text content of pdf document images within
+pdf2ocrturntotext
+
+=head1 USAGE
+
+	pdf2ocrturntotext ./*pdf
+
 
 =head1 DESCRIPTION
 
-argument is a pdf file
-
-this script assumes that each page in the pdf is one 8.5x11 page.. ONE image
-that's what the calculations are set up for
-
-
-=head1 OPTIONS
-
-	-h help
-	-d debug
-	-v version
+This feeds the cache for files provided as argument
 
 =head1 SEE ALSO
 
 PDF::OCR::Thorough::Cached
+pdf2ocr
 
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
 
-=cut

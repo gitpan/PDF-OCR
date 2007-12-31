@@ -1,18 +1,29 @@
 package PDF::OCR::Thorough::Cached;
 use base 'PDF::OCR::Thorough';
 use strict;
-use File::Slurp;
+#use File::Slurp;
 
 
 
+sub _slurp {
+   my $abs = shift;
+   open(FILE,'<', $abs) or die($!);
+   local $/;
+   my $txt = <FILE>;
+   close FILE;
+   return $txt;
+
+}
 
 sub get_text {
    my $self = shift;
 
 	unless( defined $self->{__text} ){
 		if ( $self->is_cached ){
-			my $text = File::Slurp::slurp($self->abs_cached);
+			#my $text = File::Slurp::slurp($self->abs_cached);
+         my $text = _slurp($self->abs_cached);
 			$self->{__text} = $text;
+
 		}
 		else {
 			my $text = $self->SUPER::get_text;
@@ -127,6 +138,4 @@ tesseract
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
-
-=cut
    

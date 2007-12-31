@@ -3,15 +3,22 @@ use strict;
 use File::Which 'which';
 use Carp;
 use Cwd;
-use File::Slurp;
+#use File::Slurp;
 require Exporter;
 use vars qw(@EXPORT_OK @ISA);
 @ISA = qw(Exporter);
 @EXPORT_OK = qw(get_ocr _tesseract);
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)/g;
 
 $Image::OCR::Tesseract::DEBUG= 0;
 sub DEBUG : lvalue { $Image::OCR::Tesseract::DEBUG }
+
+
+
+
+
+
+
 
 sub get_ocr {
 	my ($abs_image,$abs_tmp )= @_;
@@ -29,7 +36,7 @@ sub get_ocr {
 	   
    
 		system(@args) == 0 
-				or die(__PACKAGE__."::get_ocr(), imagemagick convert problem? @args, $?");				
+				or warn(__PACKAGE__."::get_ocr(), imagemagick convert problem? @args, $?") and return;				
 				
 		$content = _tesseract($abs_tif); defined $content or $content = '';
 		print STDERR "temp tif: $abs_tif\n" if DEBUG;		
@@ -48,12 +55,12 @@ sub _tesseract {
 	my $abs_image = shift;
 	#-f $abs_image or die("$abs_image not image");
 
-	my $tesseract = which('tesseract') or die('missing tesseract?');
+	$Image::OCR::Tesseract::bin ||= which('tesseract') or die('missing tesseract?');
 
 	#my @args = ($tesseract,$abs_image,$abs_image);
 
    
-   
+   my $tesseract = $Image::OCR::Tesseract::bin;
 	system("$tesseract $abs_image $abs_image 2>/dev/null");
 	#	or warn("call to tesseract ocr failed, system [@args] : $?") and return;
 
@@ -63,7 +70,8 @@ sub _tesseract {
 	print STDERR "text saved as '$abs_image.txt'\n" if DEBUG;
 	my $content;
 	if (-f $txt){
-		$content = File::Slurp::slurp($txt);
+		#$content = File::Slurp::slurp($txt);
+      $content = _slurp($txt);
 		unlink($txt) unless DEBUG;
 	}
 
@@ -75,6 +83,16 @@ sub _tesseract {
 }
 
 
+
+sub _slurp {
+   my $abs = shift;
+   open(FILE,'<', $abs) or die($!);
+   local $/;
+   my $txt = <FILE>;
+   close FILE;
+   return $txt;
+   
+}  
 
 1;
 

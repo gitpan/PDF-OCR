@@ -264,7 +264,7 @@ sub _get_page_text {
 		my $out = $abs_page; $out=~s/\.pdf/.txt/;
 
 		if( -f $out	){
-			$text = File::Slurp::slurp($out);
+			$text =Image::OCR::Tesseract::_slurp($out);
 			print STDERR " $out text from pdftotext [$text]\n\n" if DEBUG;
          warn("WARN Y _get_page_text has \f char") if $text=~/\f/ and DEBUG;
          

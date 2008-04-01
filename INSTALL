@@ -1,6 +1,6 @@
 INSTALL
 =======
-$Revision: 1.4 $
+$Revision: 1.5 $
 
 Leo Charre leocharre at cpan dot org
 
@@ -26,6 +26,14 @@ If it fails, you are missing non perl prerequisites...
 
 1) INSTALLING PREREQUISITES
 ===========================
+
+DEPENDENCIES
+
+You will need
+ImageMagick convert
+xpdf pdfimages
+PDF::GetImages
+
 
 
 There are a few dependencies you will need to meet. Things that are not necessarily perl.

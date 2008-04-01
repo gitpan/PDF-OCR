@@ -1,32 +1,45 @@
 package PDF::OCR;
 use strict;
-use PDF::GetImages;
-use Image::OCR::Tesseract;
+use vars qw($VERSION $DEBUG);
 use Carp;
-use Cwd;
-use File::Copy;
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.4 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.6 $ =~ /(\d+)/g;
 
-
-$PDF::OCR::DEBUG=0;
-sub DEBUG : lvalue { $PDF::OCR::DEBUG }
+sub DEBUG : lvalue { $DEBUG }
 
 sub new {
 	my($class, $arg) = @_;
 	$arg or croak("missing argument to constructor");	
 	my $self = {};
 
-	my $abs = Cwd::abs_path($arg) or croak("[$arg] not resolving with Cwd::abs_path()");
-	$abs=~/\.pdf$/i or  croak("[$arg] cant match pdf ext in filename");
-	-f $abs or croak("[$arg] is not file.");
+   
+   require Cwd;
+	my $abs = Cwd::abs_path($arg) 
+      or croak("[$arg] not resolving with Cwd::abs_path()");
 
-	my $tmpdir = '/tmp';
-	my $tmpfilename = 'ocrtmp_'.time().(int rand 8000);
-	$self->{abs_tmp} = "$tmpdir/$tmpfilename.pdf";
-	bless $self, $class;
+	$abs=~/\.pdf$/i 
+      or croak("[$arg] cant match pdf ext in filename");
 
-	File::Copy::cp($abs, $self->abs_tmp);	
-	return $self;
+	-f $abs 
+      or croak("[$abs] is not file.");
+
+   $self->{abs_pdf} = $abs;
+   
+   bless $self,$class;
+   return $self;
+   
+
+	#my $tmpdir = '/tmp';
+	#my $tmpfilename = 'ocrtmp_'.time().(int rand 8000);
+	#$self->{abs_tmp} = "$tmpdir/$tmpfilename.pdf";
+	#bless $self, $class;
+
+	#File::Copy::cp($abs, $self->abs_tmp);	
+	#return $self;
+}
+
+sub abs_pdf {
+   my $self = shift;
+   return $self->{abs_pdf};
 }
 
 sub abs_tmp {
@@ -39,12 +52,25 @@ sub abs_images {
 	my $self = shift;
 
 	unless( defined $self->{abs_images}){		
-			my $images = PDF::GetImages::pdfimages($self->abs_tmp);
-			$self->{abs_images} = $images;		
+      require PDF::GetImages;
+		my $images = PDF::GetImages::pdfimages($self->abs_pdf);
+      unless( scalar @$images ){
+         warn("no images in ".$self->abs_pdf);
+         $self->{abs_images} = [];
+         return [];
+      }
+      $self->{abs_images} = $images;
 	}
 	
 	return $self->{abs_images};
 }
+
+sub abs_images_count {
+   my $self = shift;
+   return scalar @{$self->abs_images};
+}
+
+
 
 
 sub get_ocr {
@@ -58,10 +84,17 @@ sub get_ocr {
 	return $ocr;
 }
 
+
+
+
+
 sub _get_ocr {
 	my ($self,$abs)= @_;
-
-	unless( defined $self->{ocr}->{$abs} ){ # TODO could check that this *IS* one of the files extracted		
+   defined $abs or confess('missing arg');
+   $self->{ocr} ||={};
+	unless( defined $self->{ocr}->{$abs} ){ 
+      # TODO could check that this *IS* one of the files extracted		
+      require Image::OCR::Tesseract;      
 		my $content = Image::OCR::Tesseract::get_ocr($abs);
 		$self->{ocr}->{$abs} = $content;	
 	}
@@ -70,11 +103,13 @@ sub _get_ocr {
 }
 
 
+
+
 sub get_ocr_arrayref {
 	my ($self)= @_;
 	
 	my $ocr = [];
-	for( @{$self->abs_images}){		
+	for( @{$self->abs_images} ){		
 		push @$ocr, $self->get_ocr($_);	
 	}
 
@@ -85,11 +120,16 @@ sub get_ocr_arrayref {
 sub cleanup {
 	my $self = shift;
 
-	unlink $self->abs_tmp;
+	#unlink $self->abs_tmp;
 	for(@{$self->abs_images}){
 		unlink $_;		
 	}
 	return 1;
+}
+
+sub DESTROY {
+   my $self = shift;
+   $self->cleanup;
 }
 
 
@@ -109,27 +149,34 @@ PDF::OCR - get ocr and images out of a pdf file
 	use PDF::OCR;
 
 	my $p = new PDF::OCR('/path/to/file.pdf');
+   
+   my $text = $p->get_ocr;
 
-	
 
+=head2 EXAMPLE 2
+
+	use PDF::OCR;
+
+	my $p = new PDF::OCR('/path/to/file.pdf');
+   
 	my $images = $p->abs_images; # extract images, get list of paths
 	
 	for( @{$p->abs_images} ){ # get ocr content for each
 	
 		my $content = $p->get_ocr($_);
 		
-		 print "image $_ had $content\n\n";
+		print "image $_ had content: $content\n\n";
 	}
 
 
 	my $ocrs = $p->get_ocr; # get ocr content for all as one scalar with pagebreaks
 	
-	 print "$abs_pdf had [$ocrs]\n";
+   print "$abs_pdf had [$ocrs]\n";
 
-	# get all content of all images as array ref
+	# get all content of all images as array ref, each element is one image text content
 	my @ocrs = @{ $p->get_ocr_arrayref };
 
-	 print "$abs_pdf had [@ocrs]\n";
+   print "$abs_pdf had [@ocrs]\n";
 	
 =head1 DESCRIPTION
 
@@ -167,11 +214,26 @@ get all ocr images content as array ref
 =head2 cleanup()
 
 erase temp file and all image files extracted
+called by DESTROY
+
+=head1 BUGS
+
+Please notify the AUTHOR if you find any bugs.
+
+=head1 CAVEATS
+
+This module is for POSIX systems. 
+It is not intended to run on other "systems" and no support for such will be added
+in the future.
+
+This module is in development, please notify the AUTHOR with any feedback.
 
 =head1 SEE ALSO
 
-PDF::GetImages
-Image::OCR::Tesseract
+L<PDF::GetImages>
+L<Image::OCR::Tesseract>
+L<PDF::API2>
+http://code.google.com/p/tesseract-ocr/
 
 =head1 AUTHOR
 
@@ -179,7 +241,7 @@ Leo Charre leocharre at cpan dot org
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 Leo Charre. All rights reserved.
+Copyright (c) 2008 Leo Charre. All rights reserved.
 
 =head1 LICENSE
 

@@ -1,7 +1,7 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         PDF-OCR
-version:      1.04
+version:      1.06
 version_from: lib/PDF/OCR.pm
 installdirs:  site
 requires:
@@ -9,9 +9,11 @@ requires:
     File::Copy:                    0
     File::Path:                    0
     File::Which:                   0
-    Image::Magick:                 0
-    LEOCHARRE::CLI:                0
+    Image::Magick:                 6
+    Image::OCR::Tesseract:         1.03
+    LEOCHARRE::CLI:                1.12
     PDF::API2:                     0
+    PDF::GetImages:                1.01
     Smart::Comments:               0
 
 distribution_type: module

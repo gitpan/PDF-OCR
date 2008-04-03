@@ -1,20 +1,24 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         PDF-OCR
-version:      1.06
+version:      1.07
 version_from: lib/PDF/OCR.pm
 installdirs:  site
 requires:
-    Carp:                          0
-    File::Copy:                    0
-    File::Path:                    0
-    File::Which:                   0
-    Image::Magick:                 6
-    Image::OCR::Tesseract:         1.03
-    LEOCHARRE::CLI:                1.12
-    PDF::API2:                     0
+    Carp:                          1.04
+    Cwd:                           3.12
+    Dyer::CLI:                     1.06
+    File::Copy:                    2.09
+    File::Find::Rule:              0.30
+    File::Path:                    1.08
+    File::Slurp:                   0
+    File::Spec:                    3.24
+    File::Which:                   0.05
+    Image::OCR::Tesseract:         1.13
+    PDF::API2:                     2.014
     PDF::GetImages:                1.01
-    Smart::Comments:               0
+    Smart::Comments:               v1.0.2
+    Test::Simple:                  0.7
 
 distribution_type: module
 generated_by: ExtUtils::MakeMaker version 6.30

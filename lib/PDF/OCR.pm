@@ -2,7 +2,7 @@ package PDF::OCR;
 use strict;
 use vars qw($VERSION $DEBUG);
 use Carp;
-$VERSION = sprintf "%d.%02d", q$Revision: 1.6 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
 
 sub DEBUG : lvalue { $DEBUG }
 
@@ -26,15 +26,6 @@ sub new {
    
    bless $self,$class;
    return $self;
-   
-
-	#my $tmpdir = '/tmp';
-	#my $tmpfilename = 'ocrtmp_'.time().(int rand 8000);
-	#$self->{abs_tmp} = "$tmpdir/$tmpfilename.pdf";
-	#bless $self, $class;
-
-	#File::Copy::cp($abs, $self->abs_tmp);	
-	#return $self;
 }
 
 sub abs_pdf {
@@ -119,8 +110,7 @@ sub get_ocr_arrayref {
 
 sub cleanup {
 	my $self = shift;
-
-	#unlink $self->abs_tmp;
+   
 	for(@{$self->abs_images}){
 		unlink $_;		
 	}
@@ -158,32 +148,34 @@ PDF::OCR - get ocr and images out of a pdf file
 	use PDF::OCR;
 
 	my $p = new PDF::OCR('/path/to/file.pdf');
-   
+
 	my $images = $p->abs_images; # extract images, get list of paths
 	
 	for( @{$p->abs_images} ){ # get ocr content for each
 	
-		my $content = $p->get_ocr($_);
-		
+		my $content = $p->get_ocr($_);		
 		print "image $_ had content: $content\n\n";
 	}
 
 
-	my $ocrs = $p->get_ocr; # get ocr content for all as one scalar with pagebreaks
-	
+	my $ocrs = $p->get_ocr; # get ocr content for all as one scalar with pagebreaks	
    print "$abs_pdf had [$ocrs]\n";
 
 	# get all content of all images as array ref, each element is one image text content
 	my @ocrs = @{ $p->get_ocr_arrayref };
-
    print "$abs_pdf had [@ocrs]\n";
 	
 =head1 DESCRIPTION
+
+Lets you get text out of pages in pdf documents.
 
 The whole process does not change your original pdf in any way.
 
 Please note this is only to get text out of images inside the pdf file, it does not check for genuine text inside the file- if any.
 For that please see L<PDF::OCR::Thorough>
+
+If you scan in paper documents into PDFs, like 'modern' office environments, then these modules are 
+useful to you.
 
 =head1 METHODS
 
@@ -197,24 +189,28 @@ This will copy the file to a tmp file.
 
 =head2 abs_images()
 
-returns array ref with images extracted from the pdf
+Returns array ref with images extracted from the pdf.
 
 =head2 get_ocr()
 
-optional argument is abs path of image extracted from pdf
-returns ocr content
+Optional argument is abs path of image extracted from pdf.
+Returns ocr content.
 
-if no argument is given, all image ocr contents are concatenated and 
-returned as scalar (with pagebreak chars, can be regexed with \f)
+If no argument is given, all image ocr contents are concatenated and 
+returned as scalar (with pagebreak chars, can be regexed with \f).
 
 =head2 get_ocr_arrayref()
 
-get all ocr images content as array ref
+Get all ocr images content as array ref. This is the text.
 
 =head2 cleanup()
 
-erase temp file and all image files extracted
-called by DESTROY
+Erase temp file and all image files extracted.
+Called by DESTROY, unless DEBUG flag is on.
+
+=head1 DEBUG
+
+   $PDF::OCR::DEBUG = 1;
 
 =head1 BUGS
 
@@ -222,11 +218,16 @@ Please notify the AUTHOR if you find any bugs.
 
 =head1 CAVEATS
 
-This module is for POSIX systems. 
+This module is for Unix type systems.
 It is not intended to run on other "systems" and no support for such will be added
 in the future.
+Attempting to install on an unsupported OS will throw an exception.
 
 This module is in development, please notify the AUTHOR with any feedback.
+
+=head1 INSTALL
+
+Please see INSTALL help notes.
 
 =head1 SEE ALSO
 

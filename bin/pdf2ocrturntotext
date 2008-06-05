@@ -2,12 +2,12 @@
 use strict;
 use warnings;
 use lib './lib';
-use base 'Dyer::CLI';
+use base 'LEOCHARRE::CLI';
 use PDF::OCR::Thorough::Cached;
-use Smart::Comments '###';
+#use Smart::Comments '###';
 
 
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.1 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 my $conf = config('/etc/pdf2ocr.conf');
 
@@ -47,6 +47,7 @@ This feeds the cache for files provided as argument
 
 PDF::OCR::Thorough::Cached
 pdf2ocr
+PDF::OCR - this package
 
 =head1 AUTHOR
 

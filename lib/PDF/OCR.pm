@@ -2,7 +2,8 @@ package PDF::OCR;
 use strict;
 use vars qw($VERSION $DEBUG);
 use Carp;
-$VERSION = sprintf "%d.%02d", q$Revision: 1.7 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.8 $ =~ /(\d+)/g;
+
 
 sub DEBUG : lvalue { $DEBUG }
 

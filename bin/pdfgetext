@@ -3,17 +3,14 @@ use lib './lib';
 use strict;
 use warnings;
 use Cwd;
-use base 'Dyer::CLI';
+use base 'LEOCHARRE::CLI';
 use PDF::OCR::Thorough;
-
-our $VERSION = sprintf "%d.%02d", q$Revision: 1.1.1.1 $ =~ /(\d+)/g;
+our $VERSION = sprintf "%d.%02d", q$Revision: 1.2 $ =~ /(\d+)/g;
 
 my $o = gopts('fdo:');
 
-$o->{d} ||= 0;
-DEBUG($o->{d});
 
-if (DEBUG){
+if (DEBUG()){
 	$PDF::OCR::Thorough::DEBUG = 1;
 }
 

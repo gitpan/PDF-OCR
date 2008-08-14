@@ -2,8 +2,9 @@ package PDF::OCR::Thorough::Cached;
 use base 'PDF::OCR::Thorough';
 use strict;
 #use File::Slurp;
-
-
+use vars qw($ABS_CACHE_DIR $CACHE_BY_SUM);
+$ABS_CACHE_DIR = '/tmp/PDF-OCR-Thorough-Cached';
+$CACHE_BY_SUM = 0;
 
 sub _slurp {
    my $abs = shift;
@@ -15,6 +16,24 @@ sub _slurp {
 
 }
 
+sub _cli_md5sum {
+      my $abs = shift;
+      my $sum = `md5sum '$abs'`;
+      $sum=~s/\s.+$|\s+$//g;
+      $sum=~/^\w{32}$/ or die();
+      return $sum;
+}
+
+
+sub _sum2file {
+   my $sum = shift;
+   $sum=~/^(\w{2})/ or die;
+   return "$ABS_CACHE_DIR/$1/$sum";
+}
+
+
+
+# methods ...
 sub get_text {
    my $self = shift;
 
@@ -29,7 +48,8 @@ sub get_text {
 			my $text = $self->SUPER::get_text;
 			$self->_assure_abs_cached_loc;
 
-			open(FILE,">".$self->abs_cached) or die( sprintf "cannot write to %s, $!", $self->abs_cached );
+			open(FILE,">".$self->abs_cached) 
+            or die( sprintf "cannot write to %s, $!", $self->abs_cached );
 			print FILE $text;
 			close FILE;
 
@@ -41,9 +61,29 @@ sub get_text {
    return $self->{__text};
 }
 
+
+sub _md5sum {
+   my $self = shift;
+   $self->{md5sum} ||= _cli_md5sum($self->abs_pdf);
+   return $self->{md5sum};
+}
+
+
+
 sub abs_cached {
    my $self = shift;
-   my $cached = $self->abs_cache.'/'.$self->abs_pdf.'.txt';
+
+   my $cached;
+   if( $CACHE_BY_SUM ){
+      my $sum = $self->_md5sum;
+      $cached = _sum2file($sum);
+   }
+   
+   else {
+      $cached = $ABS_CACHE_DIR.'/'.$self->abs_pdf.'.txt';
+   }
+
+
    return $cached;
 }
 
@@ -57,28 +97,27 @@ sub _assure_abs_cached_loc {
 }
 
 
-sub set_abs_cache {
-   my ($self, $abs) = @_;
-   $self->{abs_cache} = $abs;
-   return 1;
-}
+*set_abs_cache = \&abs_cache;
 
 
 sub abs_cache {
    my $self = shift;
-   unless( $self->{_abs_cache}){
-      $self->{abs_cache} ||= '/tmp/PDF-OCR-Thorough-Cached';
-      -d $self->{abs_cache} or die("dir $$self{abs_cache} does not exist.");
-      $self->{_abs_cache} = $self->{abs_cache};
+   carp("abs_cache() is deprecated, use \$".__PACKAGE__."::ABS_CACHE_DIR instead");
+
+   my $abs_cache = shift;
+
+   if (defined $abs_cache){
+      $ABS_CACHE_DIR = $abs_cache;
    }
-   return $self->{_abs_cache};   
+
+   return $ABS_CACHE_DIR;
 }
 
 sub is_cached {
 	my $self = shift;
 	
 	unless( defined $self->{is_cached} ){	
-		
+		no warnings;
 		$self->{is_cached} =( -f $self->abs_cached ? 1 : 0 );
 	}
 
@@ -103,36 +142,42 @@ This is just like PDF::OCR::Thorough, only the text is saved to a text file, so 
 retrievals are snap quick.
 This inherits all the methods if PDF::OCR::Thorough
 
+
+
 =head1 SYNOPSIS
 
    my $p = new PDF::OCR::Thorough::Cached('/abs/path/file.pdf');
-   $p->set_abs_cache('/tmp/cache');
+   $PDF::OCR::Thorough::Cached::ABS_CACHE_DIR = '/tmp/cache';
+   $PDF::OCR::Thorough::Cached::CACHE_BY_SUM  = 1;
 
    my $text = $p->get_text;
 
-=head2 set_abs_cache()
+=head2 $PDF::OCR::Thorough::Cached::ABS_CACHE_DIR
 
-argument is a directory that will be the cache, defaults to '/tmp/PDF-OCR-Thorough-Cached'
+Directory that will be the cache. The directory must exist.
+Defaults to '/tmp/PDF-OCR-Thorough-Cached'.
 
-=head2 abs_cache()
+=head2 $PDF::OCR::Thorough::Cached::CACHE_BY_SUM
 
-returns directory where we cache
+If you set to true, we set where the files are stored by md5sum.
+If the ABS_CACHE_DIR is set to '/tmp/cache' and the md5sum is 209218904fc0d1bfbacdd9d90655f545,
+Then the abs_cached() destination would be:
+   /tmp/cache/20/209218904fc0d1bfbacdd9d90655f545
 
-=head2 abs_cached()
 
-returns abs path to where cached txt of pdf should be
+=head2 abs_cached() 
+
+Returns abs path to where cached txt of pdf should be.
 
 =head2 is_cached()
 
-returns boolean 
-does the cached version exist on disk?
+Returns boolean.
+Does the cached version exist on disk?
 
 =head1 SEE ALSO
 
-PDF::OCR
-
-PDF::OCR::Thorough
-
+L<PDF::OCR>
+L<PDF::OCR::Thorough>
 tesseract
 
 =head1 AUTHOR

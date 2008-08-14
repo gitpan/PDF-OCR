@@ -1,6 +1,6 @@
 INSTALL
 =======
-$Revision: 1.5 $
+$Revision: 1.6 $
 
 Leo Charre leocharre at cpan dot org
 
@@ -14,7 +14,7 @@ Change into the directory holding this file.
 
 If you see any missing modules like File::Which
 
-	cpan install File::Which
+	cpan File::Which
 
 After that 
 
@@ -22,18 +22,19 @@ After that
 
 This should take a minute or more.
 
-If it fails, you are missing non perl prerequisites...
+If it fails, you may be missing non perl prerequisites...
 
 1) INSTALLING PREREQUISITES
 ===========================
 
 DEPENDENCIES
 
-You will need
 ImageMagick convert
 xpdf pdfimages
 PDF::GetImages
-
+PDF::Burst
+CAM::PDF
+PDF::API2
 
 
 There are a few dependencies you will need to meet. Things that are not necessarily perl.
@@ -51,7 +52,6 @@ ghostscript
 openmotif 
 openmotif-devel 
 freetype2
-pdftk
 
 Changes are you have most of these.
 

@@ -11,5 +11,7 @@ so you can run ocr on any image type without bothering with the details of image
 
 Please also read the INSTALL file.
 
+This module will not run on non posix platforms.
+
 
 

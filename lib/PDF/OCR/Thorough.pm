@@ -8,68 +8,30 @@ use File::Which 'which';
 use File::Path;
 use PDF::API2;
 use PDF::GetImages;
+use PDF::Burst;
 use Image::OCR::Tesseract;
 
+
 $PDF::OCR::Thorough::DEBUG = 0;
+
 sub DEBUG : lvalue {$PDF::OCR::Thorough::DEBUG}
-
-=pod
-
-=head1 NAME
-
-PDF::OCR::Thorough - extract text fom pdf document resorting to ocr as needed
-
-=head1 SYNOPSIS
-
-	use PDF::OCR::Thorough;
-
-	my $abs_pdf = '/home/myself/file.pdf';
-
-	my $p = new PDF::OCR::Thorough($abs_pdf);
-
-	my $text = $p->get_text;
-
-=head1 DESCRIPTION
-
-unlike PDF::OCR which assumes each page in the pdf document is a page scan- This script is more thorough.
-
-1) the original.pdf is copied to tmp.pdf
-2) tmp.pdf is split into page1.pdf page2.pdf etc..
-3) for each pageX.pdf, first we try reading with pdftotext, if the result is too small we try to read with Image::OCR::Tesseract
-4) the output of each is merged with newpage chars 
-
-The output to STDOUT is all the text of all pages, but it is separated with newpage characters. These can be matched with a regex \f
-
-Please note the PDF::API2 is used to check that the pdf data is valid.
-
-This is part of the PDF::OCR Package.
-
-=head1 METHODS
-
-=cut
 
 sub new {
 	my($class, $arg) = @_;
 	$arg or croak("missing argument to constructor");	
+
 	my $self = {};
 
-	$self->{abs_pdf} = Cwd::abs_path($arg) or croak("[$arg] not resolving with Cwd::abs_path()");
+	$self->{abs_pdf} = Cwd::abs_path($arg) 
+      or croak("[$arg] not resolving with Cwd::abs_path()");
 	bless $self, $class;
 	
-	$self->pdf_data_ok or warn("the file ".$self->abs_pdf." does not check ok with PDF::API2") and return;
+	$self->pdf_data_ok 
+      or warn("the file ".$self->abs_pdf." does not check ok with PDF::API2") and return;
 	
 	return $self;
 }
 
-=head2 new()
-
-argument is the abs path to the pdf you want to read text from.
-
-	my $p = new PDF::OCR::Thorough('/home/myself/myfile.pdf');
-
-If the file is not there or the pdf data is corrupt, warns and returns undef.
-
-=cut
 
 sub pdf_data_ok {
 	my $self = shift;
@@ -81,12 +43,6 @@ sub pdf_data_ok {
 	return $self->{pdf_data_ok};
 }
 
-=head2 pdf_data_ok()
-
-takes no argument, checks if the pdf is ok, of PDF::API2 can open it
-This is called by constructor.
-
-=cut
 
 
 
@@ -96,16 +52,6 @@ sub pages {
 	$count ||= 0;
 	return $count;	
 }
-
-=head2 pages()
-
-returns number of page files extracted
-
-=cut
-
-
-
-
 
 
 sub abs_tmp {
@@ -118,13 +64,6 @@ sub abs_tmp {
 	return $self->{abs_tmp};
 }
 
-=head2 abs_tmp()
-
-returns abs path to the temp dir created
-this is where the copy of your file resides, together with any images extracted, and page files extracted.
-
-=cut
-
 sub abs_pdf {
 	my $self = shift;	
 	unless($self->{checked}){
@@ -134,11 +73,7 @@ sub abs_pdf {
 	return $self->{abs_pdf};
 }
 
-=head2 abs_pdf()
 
-abs path to your original pdf provided as argument to constructor
-
-=cut
 
 sub _tmpid {
 	my $self = shift;
@@ -153,11 +88,6 @@ sub filename {
 	return $filename;	
 }
 
-=head2 filename()
-
-returns filename of the original pdf provided as argument to constructor
-
-=cut
 
 sub abs_tmp_pdf {
 	my $self = shift;
@@ -168,21 +98,6 @@ sub abs_tmp_pdf {
 	}
 	return $self->{abs_tmp_pdf};
 }
-
-=head2 abs_tmp_pdf()
-
-returns abs path to where the temp copy of the pdf is
-
-=cut
-
-
-
-
-
-
-
-
-
 
 sub abs_images {
 	my($self,$abs_page) = @_;
@@ -214,16 +129,6 @@ sub _abs_images {
 
 	return $self->{abs_images}->{$abs_pdf};
 }
-
-=head2 abs_images()
-
-optional argument is abs path to a page file ( see abs_pages() ).
-if no argument provided, returns abs paths to all images extracted from all pages.
-
-=cut
-
-
-
 
 
 sub get_page_text {
@@ -303,14 +208,6 @@ sub _get_page_text {
 	return $self->{pagetext}->{$abs_page};
 }
 
-=head2 get_page_text()
-
-argument is page number or abs path to page file (there is no page 0)
-returns text inside
-See also get_text()
-
-=cut
-
 
 
 
@@ -336,12 +233,6 @@ sub get_text {
 	return $self->{text};
 }
 
-=head2 get_text()
-
-returns all text in all pages, separated by \f newpage chars.
-See also get_page_text()
-
-=cut
 
 
 sub get_ocr {
@@ -357,14 +248,6 @@ sub get_ocr {
 	return $self->{imgocr}->{$abs_image};	
 }
 
-=head2 get_ocr()
-
-argument is abs path to image file
-returns ocr text
-this is also cached in object
-
-=cut
-
 sub force_ocr {
 	my $self = shift;
 	my $val = shift;
@@ -375,16 +258,6 @@ sub force_ocr {
 	return $self->{force_ocr};
 }
 
-=head2 force_ocr()
-
-argument is boolean 1/0
-force extracting images and running ocr even if pdftotext finds content
-returns value
-
-You would want to set this to 1 if you expect your iamge to contain both text and large images
-perhaps with text also, and you want both extracted.
-
-=cut
 
 
 
@@ -394,11 +267,19 @@ sub _pdftk {
 	return $self->{pdftkbin};
 }
 
+
+
+
 sub abs_pages {
 	my $self = shift;
 	unless( defined $self->{abs_pages} ){
-	
-		my ($abs_tmp, $tmpid, $abs_tmp_pdf,$abs_pdf)=($self->abs_tmp, $self->_tmpid, $self->abs_tmp_pdf, $self->abs_pdf);		
+
+      my $abs_tmp_pdf = $self->abs_tmp_pdf;
+      my @abs_pages = PDF::Burst::pdf_burst($abs_tmp_pdf);
+
+=pod
+		my ($abs_tmp, $tmpid, $abs_tmp_pdf, $abs_pdf) = 
+         ($self->abs_tmp, $self->_tmpid, $self->abs_tmp_pdf, $self->abs_pdf);		
 
 		my $abs_outputname = $abs_tmp.'/'.$tmpid.'_page_%04d.pdf';
 		print STDERR " abs outputname format : $abs_outputname\n" if DEBUG;
@@ -414,7 +295,8 @@ sub abs_pages {
 		print STDERR " pdftkburst ok for $abs_tmp_pdf\n" if DEBUG;
 
 		opendir(DIR, $abs_tmp);
-		my @abs_pages = map { $_=~s/^/$abs_tmp\//; $_ } sort grep { /$tmpid\_page_\d+\.pdf/  } readdir DIR;
+		my @abs_pages = map { $_=~s/^/$abs_tmp\//; $_ } 
+         sort grep { m/$tmpid\_page_\d+\.pdf/  } readdir DIR;
 		closedir DIR;
 
 		unless( scalar @abs_pages) {
@@ -428,18 +310,13 @@ sub abs_pages {
 			print STDERR "pagefiles:\n";
 			map { print STDERR " $_\n" } @abs_pages;
 		}
-
+=cut
 		$self->{abs_pages} = \@abs_pages;
 	}
 
 	return $self->{abs_pages};
 }
 
-=head2 abs_pages()
-
-returns abs paths to burst pdf pages
-
-=cut
 
 
 
@@ -466,6 +343,147 @@ sub DESTROY {
 	return 1;
 }
 
+
+1;
+
+
+
+
+__END__
+
+
+
+
+
+=pod
+
+=head1 NAME
+
+PDF::OCR::Thorough - extract text fom pdf document resorting to ocr as needed
+
+=head1 SYNOPSIS
+
+	use PDF::OCR::Thorough;
+
+	my $abs_pdf = '/home/myself/file.pdf';
+
+	my $p = new PDF::OCR::Thorough($abs_pdf);
+
+	my $text = $p->get_text;
+
+=head1 DESCRIPTION
+
+Unlike PDF::OCR which assumes each page in the pdf document is a page scan-
+This script is more "thorough".
+
+How it works
+
+   1) The original.pdf is copied to tmp.pdf
+
+   2) tmp.pdf is split into page1.pdf page2.pdf etc..
+
+   3) For each pageX.pdf, first we try reading with pdftotext, 
+      if the result is too small we try to read with Image::OCR::Tesseract.
+
+   4) The output of each is merged with newpage chars.
+
+The output to STDOUT is all the text of all pages, but it is separated 
+with newpage characters. These can be matched with a regex \f
+
+   my @page = split(/\f/, $output );
+
+Please note the PDF::API2 is used to check that the pdf data is valid.
+
+This is part of the PDF::OCR Package.
+
+=cut
+
+
+
+
+
+
+
+=head1 METHODS
+
+=head2 new()
+
+argument is the abs path to the pdf you want to read text from.
+
+	my $p = new PDF::OCR::Thorough('/home/myself/myfile.pdf');
+
+If the file is not there or the pdf data is corrupt, warns and returns undef.
+
+=head2 pdf_data_ok()
+
+Takes no argument, checks if the pdf is ok, if PDF::API2 can open it.
+This is called by constructor.
+
+=head2 pages()
+
+Returns number of page files extracted.
+
+=head2 abs_tmp()
+
+Returns abs path to the temp dir created.
+This is where the copy of your file resides, together with any images extracted, 
+and page files extracted.
+
+=head2 get_ocr()
+
+Argument is abs path to image file.
+Returns ocr text.
+This is also cached in object.
+
+
+
+=head2 abs_pdf()
+
+Abs path to your original pdf provided as argument to constructor.
+
+=head2 filename()
+
+Returns filename of the original pdf provided as argument to constructor.
+
+=head2 abs_tmp_pdf()
+
+returns abs path to where the temp copy of the pdf is
+
+
+=head2 abs_images()
+
+optional argument is abs path to a page file ( see abs_pages() ).
+if no argument provided, returns abs paths to all images extracted from all pages.
+
+=head2 get_page_text()
+
+argument is page number or abs path to page file (there is no page 0)
+returns text inside
+See also get_text()
+
+=head2 get_text()
+
+returns all text in all pages, separated by \f newpage chars.
+See also get_page_text()
+
+=head2 abs_pages()
+
+returns abs paths to burst pdf pages
+
+=head2 force_ocr()
+
+argument is boolean 1/0
+force extracting images and running ocr even if pdftotext finds content
+returns value
+
+You would want to set this to 1 if you expect your iamge to contain both text and large images
+perhaps with text also, and you want both extracted.
+
+
+
+
+
+
 =head2 DESTROY
 
 will call cleanup() if DEBUG is not on and temp dir is in tmp
@@ -475,6 +493,15 @@ will call cleanup() if DEBUG is not on and temp dir is in tmp
 removes all temp content
 pretty rough, uses File::Path::rmtree()
 returns true.
+
+=cut
+
+
+
+
+
+
+
 
 =head1 CAVEATS
 
@@ -515,9 +542,6 @@ This package is distributed in the hope that it will be useful, but WITHOUT ANY 
 See the "GNU General Public License" for more details.
 
 =cut
-
-1;
-
 
 
 

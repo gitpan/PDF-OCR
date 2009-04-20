@@ -1,3 +1,8 @@
+2009-04-20 08:42  cvs
+
+	* README, lib/PDF/OCR.pm, lib/PDF/OCR/Thorough.pm,
+	  lib/PDF/OCR/Thorough/Cached.pm: deprecated by PDF::OCR2
+
 2008-08-14 13:09  cvs
 
 	* INSTALL, MANIFEST, Makefile.PL: Removing pdftk dep, because pdftk

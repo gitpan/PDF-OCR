@@ -2,6 +2,8 @@ pdf2ocr
 =======
 Leo Charre leocharre at cpan dot org
 
+DEPRECATED, use PDF::OCR2 instead.
+
 This is a collection of tools to make life with ocr a little easier on linux.
 For example, if you have an image and you want to read it with tesseract, it needs to be a tif- 
 the included script bin/ocr will make a temp tif file for you and read that instead

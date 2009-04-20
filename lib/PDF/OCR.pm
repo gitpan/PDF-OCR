@@ -2,7 +2,7 @@ package PDF::OCR;
 use strict;
 use vars qw($VERSION $DEBUG);
 use Carp;
-$VERSION = sprintf "%d.%02d", q$Revision: 1.9 $ =~ /(\d+)/g;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /(\d+)/g;
 
 sub DEBUG : lvalue { $DEBUG }
 
@@ -132,7 +132,7 @@ __END__
 
 =head1 NAME
 
-PDF::OCR - get ocr and images out of a pdf file
+PDF::OCR - DEPRECATED get ocr and images out of a pdf file
 
 =head1 SYNOPSIS
 
@@ -165,6 +165,19 @@ PDF::OCR - get ocr and images out of a pdf file
 	my @ocrs = @{ $p->get_ocr_arrayref };
    print "$abs_pdf had [@ocrs]\n";
 	
+=head1 DEPRECATED
+
+This module is deprecated by L<PDF::OCR2>, please do not use this code in new applications.
+
+=head2 Why not just update?
+
+After much thought and discussion on perlmonks.org, it seemed the best thing was to deprecate
+this code and upload L<PDF::OCR2>.
+PDF::OCR was offered with a development caveat. A lot of people ended up downloading and using PDF::OCR, and by the time I was ready to update, it was too radical an api change.
+I didn't want to break anybody's code.
+
+Thanks to perlmonks.org for discussion and resolion on the matter.
+
 =head1 DESCRIPTION
 
 Lets you get text out of pages in pdf documents.
@@ -218,6 +231,8 @@ Please notify the AUTHOR if you find any bugs.
 
 =head1 CAVEATS
 
+L<DEPRECATED>.
+
 This module is for Unix type systems.
 It is not intended to run on other "systems" and no support for such will be added
 in the future.
@@ -231,10 +246,11 @@ Please see INSTALL help notes.
 
 =head1 SEE ALSO
 
-L<PDF::GetImages>
-L<Image::OCR::Tesseract>
-L<PDF::API2>
-http://code.google.com/p/tesseract-ocr/
+L<PDF::OCR2> - PDF::OCR successor.
+L<PDF::GetImages> - get images out of pdf documents.
+L<Image::OCR::Tesseract> - tesseract perl wrapper.
+L<PDF::API2> - excellent pdf api.
+http://code.google.com/p/tesseract-ocr/ - tesseract optical character recognition code.
 
 =head1 AUTHOR
 
@@ -242,7 +258,7 @@ Leo Charre leocharre at cpan dot org
 
 =head1 COPYRIGHT
 
-Copyright (c) 2008 Leo Charre. All rights reserved.
+Copyright (c) 2009 Leo Charre. All rights reserved.
 
 =head1 LICENSE
 

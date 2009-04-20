@@ -134,15 +134,7 @@ __END__
 
 =head1 NAME
 
-PDF::OCR::Thorough::Cached - save ocr to text file for easy retrieval
-
-=head1 DESCRIPTION
-
-This is just like PDF::OCR::Thorough, only the text is saved to a text file, so subseuent
-retrievals are snap quick.
-This inherits all the methods if PDF::OCR::Thorough
-
-
+PDF::OCR::Thorough::Cached - DEPRECATED save ocr to text file for easy retrieval
 
 =head1 SYNOPSIS
 
@@ -151,6 +143,16 @@ This inherits all the methods if PDF::OCR::Thorough
    $PDF::OCR::Thorough::Cached::CACHE_BY_SUM  = 1;
 
    my $text = $p->get_text;
+
+=head1 DEPRECATED
+
+This module is deprecated by L<PDF::OCR2>, please do not use this code in new applications.
+
+=head1 DESCRIPTION
+
+This is just like PDF::OCR::Thorough, only the text is saved to a text file, so subseuent
+retrievals are snap quick.
+This inherits all the methods if PDF::OCR::Thorough
 
 =head2 $PDF::OCR::Thorough::Cached::ABS_CACHE_DIR
 
@@ -164,6 +166,7 @@ If the ABS_CACHE_DIR is set to '/tmp/cache' and the md5sum is 209218904fc0d1bfba
 Then the abs_cached() destination would be:
    /tmp/cache/20/209218904fc0d1bfbacdd9d90655f545
 
+=head1 METHODS
 
 =head2 abs_cached() 
 
@@ -174,8 +177,13 @@ Returns abs path to where cached txt of pdf should be.
 Returns boolean.
 Does the cached version exist on disk?
 
+=head1 CAVEATS
+
+L<DEPRECATED>.
+
 =head1 SEE ALSO
 
+L<PDF::OCR2>
 L<PDF::OCR>
 L<PDF::OCR::Thorough>
 tesseract
@@ -183,4 +191,19 @@ tesseract
 =head1 AUTHOR
 
 Leo Charre leocharre at cpan dot org
-   
+
+=head1 COPYRIGHT
+
+Copyright (c) 2009 Leo Charre. All rights reserved.
+
+=head1 LICENSE
+
+This package is free software; you can redistribute it and/or modify it under the same terms as Perl itself, i.e., under the terms of the "Artistic License" or the "GNU General Public License".
+
+=head1 DISCLAIMER
+
+This package is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the "GNU General Public License" for more details.
+
+=cut

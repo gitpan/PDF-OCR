@@ -359,7 +359,7 @@ __END__
 
 =head1 NAME
 
-PDF::OCR::Thorough - extract text fom pdf document resorting to ocr as needed
+PDF::OCR::Thorough - DEPRECATED extract text fom pdf document resorting to ocr as needed
 
 =head1 SYNOPSIS
 
@@ -370,6 +370,10 @@ PDF::OCR::Thorough - extract text fom pdf document resorting to ocr as needed
 	my $p = new PDF::OCR::Thorough($abs_pdf);
 
 	my $text = $p->get_text;
+
+=head1 DEPRECATED
+
+This module is deprecated by L<PDF::OCR2>, please do not use this code in new applications.
 
 =head1 DESCRIPTION
 
@@ -395,14 +399,6 @@ with newpage characters. These can be matched with a regex \f
 Please note the PDF::API2 is used to check that the pdf data is valid.
 
 This is part of the PDF::OCR Package.
-
-=cut
-
-
-
-
-
-
 
 =head1 METHODS
 
@@ -434,8 +430,6 @@ and page files extracted.
 Argument is abs path to image file.
 Returns ocr text.
 This is also cached in object.
-
-
 
 =head2 abs_pdf()
 
@@ -479,11 +473,6 @@ returns value
 You would want to set this to 1 if you expect your iamge to contain both text and large images
 perhaps with text also, and you want both extracted.
 
-
-
-
-
-
 =head2 DESTROY
 
 will call cleanup() if DEBUG is not on and temp dir is in tmp
@@ -494,24 +483,18 @@ removes all temp content
 pretty rough, uses File::Path::rmtree()
 returns true.
 
-=cut
-
-
-
-
-
-
-
-
 =head1 CAVEATS
+
+L<DEPRECATED>.
 
 Will not work with a corrupted pdf file.
 But it does test for that, so if it doesn't work, you know if it's because the PDF doc is messed up according to PDF::API2.
 
 =head1 SEE ALSO
 
-L<PDF::OCR>
-L<PDF::API2>
+L<PDF::OCR2> - supercedes this module.
+L<PDF::OCR> - parent package.
+L<PDF::API2> - excellent pdf api.
 
 =head1 REQUIREMENTS
 
@@ -529,7 +512,7 @@ Leo Charre leocharre at cpan dot org
 
 =head1 COPYRIGHT
 
-Copyright (c) 2007 Leo Charre. All rights reserved.
+Copyright (c) 2009 Leo Charre. All rights reserved.
 
 =head1 LICENSE
 
@@ -542,9 +525,4 @@ This package is distributed in the hope that it will be useful, but WITHOUT ANY 
 See the "GNU General Public License" for more details.
 
 =cut
-
-
-
-
-
 
